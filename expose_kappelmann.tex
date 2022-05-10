@@ -1,0 +1,472 @@
+% \documentclass{article}
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage{proof}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage[final]{microtype}
+\usepackage[bottom]{footmisc}
+
+% paper margins
+\usepackage[margin=0.75in]{geometry}
+\pagestyle{plain}
+\usepackage{xspace}
+
+% multiple colums
+\usepackage{multicol}
+
+%Title page settings
+\usepackage[affil-it]{authblk}
+
+% Title of document
+\title{\textbf{PhD Exposé -- Soft Type Systems For Interactive Theorem Proving}}
+% Author
+\author{Kevin Kappelmann}
+% \affil{Chair for Logic and Verification}
+\date{\vspace{-5ex}}
+
+%% Bibliography
+\usepackage[numbers]{natbib}
+% \usepackage[%
+% backend=bibtex,
+% url=true,
+%style=alphabetic,
+% maxnames=4,
+% minnames=3,
+% maxbibnames=99,
+% giveninits,
+% uniquename=init]{biblatex}
+
+%% Graphics
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{standalone}
+\usetikzlibrary{quotes,angles,calc,arrows.meta,positioning,automata}
+\tikzset{initial text={}}
+\usepackage{tikz-3dplot}
+\usepackage{subcaption}
+
+%% Hyperlinks
+\usepackage{url}
+\definecolor{pastelblue}{RGB}{0,72,205}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+ colorlinks,
+ linktoc=page,
+ linkcolor=pastelblue,
+ citecolor=pastelblue,
+ urlcolor=pastelblue
+}
+
+\usepackage{enumitem}
+% \newlist{listnointend}{enumerate}{1}
+% \setlist[listnointend,1]{
+  % label={\arabic*},
+  % leftmargin=*,
+  % align=left,
+  % itemindent=10pt
+% }
+
+%% Coding
+\usepackage[outputdir=build]{minted}
+
+% Math packages
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{mathpartir}
+\usepackage{wasysym}
+\usepackage{stmaryrd}
+\usepackage{centernot}
+
+% Proof system
+\usepackage{amsthm}
+%% References
+\usepackage[capitalize,sort,compress,noabbrev]{cleveref}
+\crefdefaultlabelformat{#2\textup{#1}#3}
+\Crefname{thm}{Theorem}{Theorems}
+\Crefname{lem}{Lemma}{Lemmas}
+\Crefname{prop}{Proposition}{Propositions}
+\Crefname{cor}{Corollary}{Corollary}
+\Crefname{defn}{Definition}{Definitions}
+\Crefname{exmpl}{Example}{Examples}
+\Crefname{rmk}{Remark}{Remarks}
+\Crefname{propy}{Property}{Properties}
+\Crefname{claim}{Claim}{Claim}
+\Crefname{assmlisti}{Assumption}{Assumptions}
+\Crefname{invarlisti}{Invariant}{Invariants}
+
+% spacing fixes for proof system
+\makeatletter
+% \def\thm@space@setup{%
+  % \thm@preskip=\parskip \thm@postskip=0pt
+% }
+\makeatother
+\theoremstyle{plain}
+\newtheorem{thm}[equation]{Theorem}
+\newtheorem{lem}[equation]{Lemma}
+\newtheorem{prop}[equation]{Proposition}
+\newtheorem{cor}[equation]{Corollary}
+\theoremstyle{definition}
+\newtheorem{defn}[equation]{Definition}
+\newtheorem{exmpl}[equation]{Example}
+\newtheorem*{rmk}{Remark}
+\makeatletter
+
+% Custom commands
+
+% Quotes with author
+\usepackage{xparse}
+
+\let\oldquote\quote
+\let\endoldquote\endquote
+
+\RenewDocumentEnvironment{quote}{o}
+  {\oldquote}
+  {\IfValueT{#1}{\par\nobreak
+   \hfill--- #1}\endoldquote\addvspace{\smallskipamount}}
+
+%------------------------------------------------------------------------------
+\begin{document}
+% \pagenumbering{gobble}
+\maketitle
+
+\abstract{
+Most interactive theorem provers
+are based on a rigid kind of type theory.
+In such systems, typing rules
+are fixed once and for all
+and users are bound to formlise their work
+subject to these rules.
+An alternative is to use soft type systems.
+In such systems, user can specify new typing rules
+at any time without threatening soundness of the prover.
+Soft types have the potential to make
+proof assistants more flexible
+and expressive.
+Yet, they are heavily underexplored.
+In my PhD project,
+I want to assess the practicality of soft type systems
+and lay the foundations for a modern soft type
+framework for interactive theorem provers.
+}
+% \tableofcontents
+
+% \newpage
+\pagenumbering{arabic}
+
+\section{Introduction and Motivation}\label{sec:intro}
+
+The establishment of mathematical truths rests on
+the discovery of proofs.
+In simple terms, one may think of a proof
+as a coherent chain of logical arguments
+leading from a collection of premises to a conclusion.
+This, however, leads to many questions:
+When is an argument ``logical''?
+What rules and premises are there to begin with?
+Some of the most distinguished mathematicians
+intensively debated these questions in the beginning of the 20th century,
+and the rigorous, axiomatic foundations of modern mathematics are the result of these debates~\cite{hilbertprogram}.
+
+However, on a daily basis,
+contemporary scientists do not publish
+complete formal proofs with respect to some axiomatic foundation,
+which often requires tedious low-level reasoning,
+but rather use reasoning principles of a higher level.
+A proof written this way is accepted if the community agrees that the reasoning at hand can, in theory,
+be translated to an accepted axiomatic basis.
+In practice, however,
+this translation is not spelled out,
+and the proof remains susceptible to human error.
+% despite all scientific rigour that went into it.
+
+Interactive theorem provers (also known as proof assistants),
+such as Isabelle~\cite{isabelle}, Coq~\cite{coq}, and Lean~\cite{lean},
+try to close this gap by providing
+a computer-checked form of mathematical reasoning.
+At their core,
+they all rely on the axiomatic method of mathematics.
+As such,
+they fix a set of axioms on top of which users
+can axiomatise and define new concepts and prove theorems.
+
+Most interactive theorem provers
+are based on some form of \emph{type theory}.
+Simply speaking,
+types act as categorisations of mathematical values and structures.
+The natural numbers ($\mathbb{N}$),
+functions on integers ($\mathbb{Z}\Rightarrow \mathbb{Z}$),
+and the collection of $m\times n$ matrices in a given domain ($D^{m\times n}$) are examples of types.
+
+Systems based on type theory
+use a set of \emph{typing rules} and a \emph{type checker}.
+The typing rules are the axioms of the type system,
+specifying which expressions may belong to each type.
+They are usually stated in a declarative form.
+The type checker is the algorithmic counterpart of these declarative rules.
+It takes a term $t$ and a type $T$ and
+checks, according to the typing rules,
+whether $t$ is of type $T$, which we denote by $t : T$.
+
+Type systems are a very helpful mechanism,
+preventing users from common mistakes,
+such as applying a function to a value outside its domain.
+However, as mentioned by \citet{krauss},
+they deviate from the de facto standard
+in mathematics,
+where a set-theoretic foundation is taken for granted.
+Moreover, virtually all major proof assistants
+take their set of typing rules and their type checker
+as a fixed primitive.
+When a mathematical concept is not easily expressible using these primitives,
+types can become a serious limitation
+(see \citet{krauss} for some examples).
+
+While many of these limitations could be addressed
+by appropriately modifying the type system at hand,
+this rarely happens in practice:
+First, the type system builds the axiomatic basis of said proof assistants.
+Changing it hence raises meta-theoretical soundness concerns.
+Second, modifying the core of such systems
+requires significant implementation work.
+Third, no set of typing rules is perfect
+and users thus may wish to switch from one set of rules to another one
+without introducing incompatible foundations.
+
+I propose to address these limitations
+by developing a \emph{soft type}\footnote{The term originates from the programming language community~\cite{cartwright},
+where it has a different meaning: it is the principle of statically type-checking as much as possible while inserting run-time checks for what cannot be statically checked.}
+framework for proof assistants.
+Unlike traditional ``hard'' type systems,
+soft type systems do not take the notion of a type as primitive.
+Instead, they reduce it to existing concepts of the underlying logic.
+In their most simple form,
+soft types can be defined as predicates on terms:
+a term $t$ is of soft type $T$ if and only if $T(t)$.
+Moreover, a typing rule simply becomes a proven inference rule in the underlying logic.
+This way, types and typing rules become first-class objects,
+and type checking nothing more than
+theorem proving inside the given logic.
+
+As explained by \citet{krauss},
+soft type systems provide an extremely flexible and powerful framework:
+user can add and remove types and typing rules anytime,
+and they can do so without changing the foundation of the system.
+Treating types as predicates also more closely
+resembles the way mathematicians
+think about types in set-theoretic frameworks,
+as explicated by \citet{harrison}.
+For example,
+given the set of natural numbers $\mathbb{N}$,
+one can define the type of natural numbers as the predicate
+$\mathtt{Nat}\ n \coloneqq n \in \mathbb{N}$.
+Moreover,
+soft types allow for an inclusive
+interpretation of subtyping (in which $t : A$ and $A <: B$ implies $t : B$)
+rather than
+an coercive one (where terms of a subtype need to be lifted with coercion functions).
+As an example, $n : \mathbb{N}$ does not imply $n : \mathbb{Z}$ in usual hard type systems
+but the implication does hold in a suitable soft type system based on set theory.
+% This is particularly interesting in the case of set-theoretic number systems:
+% there we have $\mathbb{N}\subseteq\mathbb{Z}$,
+% but $n : \mathbb{N}$ does not imply $n : \mathbb{Z}$ in corresponding hard type systems.
+
+\section{State of the Art}
+
+Interactive theorem provers can broadly be
+classified into
+\begin{enumerate}
+\item the higher-order logic provers
+based on simply-typed lambda calculus
+(e.g.\ HOL-Light, Isabelle/HOL),
+\item the dependent type provers (e.g.\ Agda, Coq, Lean), and
+\item the provers based on traditional set theory (e.g.\ Isabelle/ZF, Metamath, Mizar).
+\end{enumerate}
+By design, proof assistants of the first two categories are based on hard type systems of differing strengths and weaknesses.
+Though they proved quite successful and
+received more attention than their set-theoretic counterparts,
+they all suffer from the limitations sketched in \cref{sec:intro}.
+Proof assistants of the third category,
+in contrast,
+lend themselves particularly well to soft type systems.
+However, most such provers stay in a completely untyped or at best very restricted soft type framework.
+
+A notable exception is Mizar~\cite{mizar}.
+Mizar is based on an untyped set theory but nevertheless supports the notion of types.
+Mizar users can define new types
+by defining predicates on sets.
+Its typing rules are not fixed axiomatically
+but rather are specified and proven to be sound with
+the help of the user in a controlled manner.
+Mizar pioneered the realm of soft types and has a remarkable
+library of formalised mathematics~\cite{mml}.
+However, Mizar falls short in important aspects:
+\begin{enumerate}
+  \item It uses a fixed type checker
+    which is not proof-producing but part of the trusted kernel~\cite{wiedijk}.
+    As such, it cannot be modified without raising meta-theoretical soundness concerns.
+    Moreover, Mizar is closed-source, and as such,
+    users have no possibility to modify or replace the type checker.
+  \item It only accepts typing rules adhering to a strict format (so-called ``registrations'').
+  \item It is neither interactive nor programmable;
+    as such, it is more akin to being ``just'' a proof verifier rather than an interactive theorem prover.
+  \item It uses idiosyncratic type-theoretic concepts and terminology,
+    rendering its usage difficult to both
+    computer scientists and mathematicians.
+\end{enumerate}
+
+To the best of my knowledge,
+there is no other significant work towards
+a rich soft type framework for proof assistants.
+
+\section{Objectives and Research Questions}
+
+My objective is to lay the foundations for a modern soft type framework for interactive theorem provers.
+First, this requires a deep understanding of state-of-the-art hard type systems
+and formulating appropriate generalisations thereof that can deal with the more flexible soft type approach.
+Second, this requires proving practicality of the approach and contrasting it with
+existing frameworks employed by proof assistants
+by means of a workable implementation and appropriate case studies.
+
+As part of this endeavour, a number of different research questions arise, such as:
+\begin{itemize}
+\item Which requirements should a modern soft type system meet?
+  Which concepts known from hard type systems should be integrated?
+  Which ones have to be generalised?
+  Which additional concepts have to be introduced?
+\item Can we build a soft type system which is flexible, predictable, and sufficiently efficient?
+\item Which structures (e.g.\ sets, lambda terms) lend themselves well for soft type systems? Which soft typing rules form a practical basis for these structures?
+\item Some concepts, such as function spaces, may be expressible in both the underlying logical foundation (e.g.\ simply-typed lambda calculus) and the structures on top of which the soft type system is employed (e.g.\ sets).
+  Can we efficiently move between both worlds?
+\item How can we integrate soft types in existing proof assistants in a user-friendly manner?
+\item Can soft types effectively help us expressing concepts that usually are impossible, or at least difficult,
+  to formulate using just the underlying logic of a given proof assistant
+  (e.g.\ using dependent soft types in HOL provers)?
+\end{itemize}
+Given the complexity and extent of modern research in type theory and proof assistants,
+I acknowledge that it is not realistic to answer all of these questions
+in my PhD project,
+but I aim to take major steps in this direction.
+
+\section{Methodology and Project Plan}
+
+Krauss and Chen~\cite{isabelleset} started a first prototype of
+a soft type system in Isabelle/HOL,
+which I joined at the beginning of my PhD.
+We built a simple soft type framework in which soft types
+are identified by predicates on terms.
+To test the framework,
+we first axiomatised a Tarski–Grothendieck set theory
+inside Isabelle/HOL.
+Relative consistency of such a theory
+has been shown by \citet{brown2019higher}.
+Second, we built a basic untyped library for this
+set theory, inspired by the work in Isabelle/ZF~\cite{isabellezf}.
+Third, we combined the untyped set theory with
+our soft type framework and built a small mathematical library that uses the idea of soft types on sets.
+This library is called Isabelle/Set and is continuously updated on GitHub~\cite{isabelleset}.
+
+Let me explain our choices.
+\begin{itemize}
+  \item We use Isabelle because:
+    \begin{enumerate}
+      \item It supports multiple object logics.
+        This allows us to test the flexibility and practicality of the soft type framework with respect to different underlying foundations (e.g.\ higher-order and first-order logic).
+      \item It is one of the most prominent proof assistants, offering large proof libraries and good automation and programming documentation.
+      \item It is co-developed at the Technical University of Munich and both my supervisor Prof.\ Nipkow and I have experience using it.
+    \end{enumerate}
+  \item We built a library in Isabelle/HOL rather than Isabelle/ZF because:
+    \begin{enumerate}
+      \item The first-order nature of Isabelle/ZF prevents us from expressing
+        soft types that require higher-order quantification (such as the second-order function \makebox{$(\mathbb{N}\Rightarrow\alpha)\Rightarrow\alpha$}).
+    While in theory, such functions can be internalised in the set theory, this is not done in Isabelle/ZF and rewriting it to do so requires substantial work.
+  \item Isabelle/HOL provides mechanisms which can prove valuable to the development of a soft type system.
+    For example, a generalisation of the transfer and lifting packages~\cite{lifting} may be used to move between related softly-typed structures within the set theory.
+    \end{enumerate}
+  \item The choice of a Tarski-Grothendieck set theory is not crucial and could be replaced by other sufficiently strong theories.
+\end{itemize}
+
+With this prototype at hand,
+we were able test the feasibility of the approach and discovered new challenges.
+At this point, Krauss and soon after also Chen stepped
+back from the project and I became the sole researcher and developer of the project.
+
+Following further analysis and an extensive phase of literature research,
+I identified the following problems:
+\begin{itemize}
+  \item The current type checker is not strong enough:
+    It is based on a simplification of the algorithm used in Mizar.
+    However, the typing rules we use in Isabelle/Set are not restricted
+    in the same way as Mizar's typing rules are.
+    As such, many type checking problems that user's expect to
+    be trivial cannot be discharged and are left for manual proof.
+  \item The current type checker and synthesiser are two separate algorithms.
+    This approach differs from modern programming languages and proof assistants,
+    which use \emph{bidirectional typing} instead.
+    Bidirectional typing supports features for which pure type synthesis
+    is undecidable~\cite{bidirectional}.
+    This reduces the type annotation burden put on users.
+  \item The current type checker and synthesiser are not flexible enough:
+    the latter expects a certain form of function types and both
+    can barely be extended or guided by users without touching the Isabelle/ML code.
+  \item We developed a \emph{set extension} mechanism that,
+    for example, allows us to construct a set-theoretic number system
+    with the wanted inclusions $\mathbb{N}\subset\mathbb{Z}\subset\mathbb{Q}\subset\mathbb{R}\subset\mathbb{C}$.
+    As part of this process, a set extension takes a set $A$ and
+    creates a new set $A'$ together with a set-isomorphism $f : A\to A'$.
+    One then wishes to lift existing definitions and theorems on $A$ to $A'$ using $f$.
+    However, the current lifting package of Isabelle/HOL does not support this use case since $f$ is not right-total and right-unique on the underlying Isabelle/Pure type of $A'$.
+  \item
+    % The type class mechanism of Isabelle~\cite{isatypeclasses} is weaker than the type class mechanisms of Coq and Lean.
+    % We can obtain the same expressivity in Isabelle
+    % by encoding type classes using soft types and sets.
+    In certain cases,
+    users must\footnote{for example, when encoding type classes as sets} -- or may wish to -- internalise Isabelle/Pure functions to set-theoretic functions.
+    At the moment, users have to do this by hand.
+    Automation would greatly improve the user experience.
+\end{itemize}
+In the next steps of my PhD, I propose to address these problems as follows:
+\begin{itemize}
+  \item The type checker and synthesiser are unified into a bidirectional typing framework.
+    Inspired by state-of-the-art work on hard type systems
+    \cite{de2015elaboration,guidi2019implementing,mazzoli2016type,tassi2012bi,vytiniotis2011outsidein}
+    and based on my experience with Isabelle/Set,
+    I propose to build the framework on a constraint logic programming basis.
+    The framework will be extensible -- users can register new constraint solvers at any time --
+    and controllable -- users can add, remove, and adjust the priorities of typing rules.
+    To my understanding,
+    most hard type systems can be encoded as a constraint logic program.
+    I plan to stress this by providing examples of such encodings using my framework.
+  \item The lifting package of Isabelle/HOL can be generalised to support the cases arising as part of the set extension mechanism of Isabelle/Set.
+    Together with Juli Gottfriedsen,
+    I already generalised the required theory and proved its correctness in unpublished work.
+    As a next step,
+    a generalisation of the lifting algorithm will be implemented and its
+    usability tested in a case study.
+    As part of this study,
+    I expect to categorise classes of subproblems that are generated when applying the generalised lifting algorithm.
+    Finding appropriate automation to solve these subproblems follows as a next step.
+    I moreover plan to investigate whether the lifting package can be useful when dealing with the internalisation problem mentioned above.
+  \item Having both the new soft type framework and lifting package at hand,
+    I plan to assess the practicality of the resulting system
+    by conducting a formalisation case study that
+    requires advanced type-theoretical concepts (dependent and intersection types, type classes, etc.).
+    The formalisation will be contrasted with those of corresponding developments in other proof assistants.
+    The results of this study will indicate future directions and possible improvements of the framework.
+\end{itemize}
+The complete project schedule of my PhD project can be found in TODO.
+
+Finally, let me stress that,
+while the practical implementation of my work will be done in the Isabelle proof assistant,
+the theoretical knowledge gained during the project will be applicable to interactive theorem provers and the type theory community in general.
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{sources}
+
+\end{document}
+
