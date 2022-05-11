@@ -39,7 +39,7 @@
 % uniquename=init]{biblatex}
 
 %% Graphics
-\usepackage{xcolor}
+\usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{float}
@@ -115,6 +115,13 @@
 \newtheorem{exmpl}[equation]{Example}
 \newtheorem*{rmk}{Remark}
 \makeatletter
+
+% Landscape
+\usepackage{pdflscape}
+
+% Tables
+\usepackage{array}
+\newcolumntype{P}[1]{>{\raggedright\vrule height4ex width 0pt}p{#1}<{\vrule depth 2.5ex width 0pt}}
 
 % Custom commands
 
@@ -458,13 +465,79 @@ In the next steps of my PhD, I propose to address these problems as follows:
     The formalisation will be contrasted with those of corresponding developments in other proof assistants.
     The results of this study will indicate future directions and possible improvements of the framework.
 \end{itemize}
-The complete project schedule of my PhD project can be found in TODO.
-
-Finally, let me stress that,
+Let me stress that,
 while the practical implementation of my work will be done in the Isabelle proof assistant,
 the theoretical knowledge gained during the project will be applicable to interactive theorem provers and the type theory community in general.
 
+Finally, the project schedule of my PhD project can be found in \cref{fig:projectschedule}.
+I want to note, reflect, and acknowledge that
+the initial phase (Q4 2019 -- Q2 2021) of my project
+did not progress as quickly as one would likely expect from a PhD project.
+The reasons are as follows:
+\begin{itemize}
+  \item From Q4 2019 -- Q2 2021, I was one of the main supervisors for various mandatory courses of the Informatics Bachelors degree with $\approx 1100$ students/course.
+    Supervision of these courses has been particularly time-consuming due to the Corona pandemic.
+  \item From Q1 2021 -- Q2 2021, I had to complete courses worth 15 ECTS due to formal requirements to get accepted into the TUM graduate school.
+  \item While it might have been possible to publish a first paper about the initial prototype of Isabelle/Set,
+    I decided against it and instead doubled down on analysing the problems of the prototype
+    and reviewing the literature.
+    I followed this path because I was not satisfied with the results at hand and believed that publishing a first weak report on Isabelle/Set would have diminished interest of the research community in follow-up papers and hence the overall research impact of the project.
+\end{itemize}
+
 \newpage
+
+\begin{landscape}
+\begin{figure}[ht]
+\centering
+\begin{tabular}{|P{6cm}*{21}{|c}|}
+\hline
+\centering \raisebox{-2ex}[0pt][0pt]{Project schedule} & \multicolumn{1}{c|}{2019} & \multicolumn{4}{c|}{2020} & \multicolumn{4}{c|}{2021} & \multicolumn{4}{c|}{2022} & \multicolumn{4}{c|}{2023} & \multicolumn{3}{c|}{2024} \\
+\cline{2-21}
+\multicolumn{1}{|c|}{\vphantom{$\Big|$}} &
+\scriptsize Q4 &
+\scriptsize Q1 & \scriptsize Q2 & \scriptsize Q3 & \scriptsize Q4 &
+\scriptsize Q1 & \scriptsize Q2 & \scriptsize Q3 & \scriptsize Q4 &
+\scriptsize Q1 & \scriptsize Q2 & \scriptsize Q3 & \scriptsize Q4 &
+\scriptsize Q1 & \scriptsize Q2 & \scriptsize Q3 & \scriptsize Q4 &
+\scriptsize Q1 & \scriptsize Q2 & \scriptsize Q3 \\
+\hline
+Study theoretical background &
+\multicolumn{2}{c}{\cellcolor{lightgray}} &&&&&&&&&&&&&&&&&& \\
+\hline
+Prototype of Isabelle/Set &
+& \multicolumn{5}{c}{\cellcolor{lightgray}} &&&&&&&&&&&&&& \\
+\hline
+Analysis of prototype and literature review &
+&&&& \multicolumn{5}{c}{\cellcolor{lightgray}} &&&&&&&&&&& \\
+\hline
+Theoretical development of lifting generalisation &
+&&&&&&&& \multicolumn{2}{c}{\cellcolor{lightgray}} &&&&&&&&&& \\
+\hline
+Implementation of bidirectional typing framework &
+&&&&&&&&&& \multicolumn{2}{c}{\cellcolor{lightgray}} &&&&&&&& \\
+\hline
+Evaluation of typing framework and first paper  &
+&&&&&&&&&&&& \multicolumn{3}{c}{\cellcolor{lightgray}} &&&&& \\
+\hline
+Implementation of lifting generalisation &
+&&&&&&&&&&&& \multicolumn{3}{c}{\cellcolor{lightgray}} &&&&& \\
+\hline
+Case study of updated Isabelle/Set &
+&&&&&&&&&&&&&& \multicolumn{2}{c}{\cellcolor{lightgray}} &&&& \\
+\hline
+Evaluation of Isabelle/Set and second paper &
+&&&&&&&&&&&&&&& \multicolumn{2}{c}{\cellcolor{lightgray}} &&& \\
+\hline
+Thesis writing and presentation &
+&&&&&&&&&&&&&&&&& \multicolumn{3}{c}{\cellcolor{lightgray}} \\
+\hline
+\end{tabular}
+\caption{Project schedule}\label{fig:projectschedule}
+\end{figure}
+\end{landscape}
+
+\newpage
+
 \bibliographystyle{plainnat}
 \bibliography{sources}
 

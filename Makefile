@@ -9,6 +9,10 @@ pdf:
 watch:
 	latexmk -interaction=nonstopmode -outdir=$(OUT) -pdf -shell-escape -pvc -halt-on-error $(FILE)
 
+.PHONY: start
+start:
+	gnome-terminal -x "bash" -c "make watch" &
+
 .PHONY: clean
 clean:
 	rm -rf $(filter-out $(OUT)/$(FILE).pdf, $(wildcard $(OUT)/*))
@@ -17,6 +21,6 @@ clean:
 purge:
 	rm -rf $(OUT)
 
-.PHONY: start
-start:
-	gnome-terminal -x "bash" -c "make watch" &
+.PHONY: open
+open:
+	xdg-open $(OUT)/$(FILE).pdf
